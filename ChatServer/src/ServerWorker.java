@@ -49,18 +49,40 @@ public class ServerWorker extends Thread{
                 if("quit".equalsIgnoreCase(cmd)){
                     handleLogoff();
                     break;
-                }else if("login".equalsIgnoreCase(cmd)){
+                }else if("msg".equalsIgnoreCase(cmd)){
+                    String[] tokensMsg= StringUtils.split(line,null,3);
+                    handleMessage(tokensMsg);
+                }
+                else if("login".equalsIgnoreCase(cmd)){
                     handleLogin(tokens);
                 }
-                else{
+                else if("sendall".equalsIgnoreCase(cmd)){
                     ArrayList<ServerWorker> workers = this.server.getWorkerList();
                     for (ServerWorker worker : workers){
                         worker.outputStream.write((line+"\n\r").getBytes());
                     }
+                }else{
+                    this.outputStream.write("Please Login\n\r".getBytes());
                 }
             }
         }
         clientSocket.close();
+    }
+
+    public void handleMessage(String[] tokensMsg) throws IOException {
+        if(tokensMsg.length>2 && tokensMsg!=null){
+            String sendTo=tokensMsg[1];
+            String bodyMsg=tokensMsg[2];
+
+            ArrayList<ServerWorker> workers= this.server.getWorkerList();
+            for (ServerWorker worker : workers){
+                if(worker.getClientSession()!=null && this.clientSession!=null){
+                    if(sendTo.equals(worker.getClientSession())){
+                        worker.outputStream.write((bodyMsg+"\n\r").getBytes());
+                    }
+                }
+            }
+        }
     }
 
     public void handleLogoff() throws IOException {
