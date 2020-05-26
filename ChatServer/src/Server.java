@@ -16,9 +16,9 @@ public class Server extends Thread{
             ServerSocket serverSocket =new ServerSocket(serverPort);
             while(true){
                 System.out.println("Wating for connection!");
-                Socket socket= serverSocket.accept();
-                System.out.println("Access Success full with: "+socket.getRemoteSocketAddress());
-                ServerWorker worker = new ServerWorker(this,socket);
+                Socket clientSocket= serverSocket.accept();
+                System.out.println("Access Success full with: "+clientSocket.getRemoteSocketAddress());
+                ServerWorker worker = new ServerWorker(this,clientSocket);
                 this.workerList.add(worker);
                 worker.start();
                 System.out.println("Client Number: "+workerList.size());
