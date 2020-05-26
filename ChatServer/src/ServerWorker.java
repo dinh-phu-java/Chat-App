@@ -1,12 +1,21 @@
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class ServerWorker extends Thread{
 
     private final Socket socket;
+    private Server server;
+    private OutputStream outputStream;
+    private InputStream inputStream;
+    private BufferedReader reader;
 
-    public ServerWorker(Socket socket){
+    public ServerWorker(Server server,Socket socket){
+        this.server=server;
         this.socket=socket;
     }
     @Override
@@ -21,15 +30,27 @@ public class ServerWorker extends Thread{
     }
 
     public void handleSocket() throws IOException, InterruptedException {
-        InputStream inputStream = socket.getInputStream();
-        BufferedReader reader= new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
-        OutputStream outputStream=socket.getOutputStream();
-        OutputStreamWriter writer=new OutputStreamWriter(outputStream,"UTF-8");
-        for (int i=0;i<10;i++){
-            String a= "Time now is ê "+new Date()+"\n\r";
-            writer.write(a);
-            //outputStream.write((a).getBytes());
-            Thread.sleep(1000);
+         this.inputStream = socket.getInputStream();
+         this.reader= new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
+         this.outputStream=socket.getOutputStream();
+        String line;
+        while( (line=reader.readLine())!=null ){
+            String[] tokens= StringUtils.split(line);
+            if(tokens != null && tokens.length>0){
+                String cmd= tokens[0];
+                System.out.println(line);
+                outputStream.write((line+"\n\r").getBytes());
+                if("quit".equalsIgnoreCase(cmd)){
+                    break;
+                }
+                else{
+                    ArrayList<ServerWorker> workers = this.server.getWorkerList();
+                    for (ServerWorker worker : workers){
+                        worker.outputStream.write((line+"\n\r").getBytes());
+                    }
+                }
+            }
+
         }
         socket.close();
     }
